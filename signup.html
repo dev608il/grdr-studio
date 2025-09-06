@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - GRDR STUDIO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        
+        .signup-container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        .signup-header { text-align: center; margin-bottom: 30px; }
+        .signup-header h1 { color: #ff6b6b; font-size: 28px; margin-bottom: 10px; }
+        .signup-header p { color: #666; font-size: 14px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #333; font-weight: 600; }
+        .form-control { width: 100%; padding: 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; }
+        .form-control:focus { outline: none; border-color: #ff6b6b; }
+        
+        .form-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; }
+        .check-btn { padding: 12px 20px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+        .check-btn:hover { background: #5a6268; }
+        .check-btn.success { background: #28a745; }
+        
+        .signup-btn { width: 100%; padding: 15px; background: #ff6b6b; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        .signup-btn:hover { background: #ff5252; }
+        .signup-btn:disabled { background: #ccc; cursor: not-allowed; }
+        
+        .login-link { text-align: center; margin-top: 20px; }
+        .login-link a { color: #ff6b6b; text-decoration: none; font-weight: 600; }
+        .login-link a:hover { text-decoration: underline; }
+        
+        .error-message { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 20px; display: none; }
+        .success-message { background: #d4edda; color: #155724; padding: 10px; border-radius: 5px; margin-bottom: 20px; display: none; }
+        
+        .terms-group { margin: 20px 0; }
+        .checkbox-group { display: flex; align-items: center; margin-bottom: 10px; }
+        .checkbox-group input[type="checkbox"] { margin-right: 8px; }
+        .checkbox-group label { margin-bottom: 0; font-weight: normal; }
+        .terms-link { color: #ff6b6b; text-decoration: none; }
+        .terms-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="signup-header">
+            <h1>GRDR STUDIO</h1>
+            <p>회원가입</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="signupForm">
+            <div class="form-group">
+                <label for="email">이메일 *</label>
+                <div class="form-row">
+                    <input type="email" id="email" class="form-control" required placeholder="example@email.com">
+                    <button type="button" class="check-btn" id="emailCheckBtn" onclick="checkEmail()">중복확인</button>
+                </div>
+                <small id="emailStatus" style="color: #666; font-size: 12px;"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="password">비밀번호 *</label>
+                <input type="password" id="password" class="form-control" required placeholder="8자 이상 입력하세요" minlength="8">
+                <small style="color: #666; font-size: 12px;">영문, 숫자 포함 8자 이상</small>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">비밀번호 확인 *</label>
+                <input type="password" id="confirmPassword" class="form-control" required placeholder="비밀번호를 다시 입력하세요">
+                <small id="passwordStatus" style="color: #666; font-size: 12px;"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="name">이름 *</label>
+                <input type="text" id="name" class="form-control" required placeholder="홍길동">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">휴대폰 번호 *</label>
+                <input type="tel" id="phone" class="form-control" required placeholder="010-1234-5678">
+            </div>
+
+            <div class="form-group">
+                <label for="address">주소</label>
+                <input type="text" id="address" class="form-control" placeholder="서울시 강남구...">
+            </div>
+
+            <div class="terms-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreeAll" onchange="toggleAllTerms()">
+                    <label for="agreeAll"><strong>전체 동의</strong></label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreeTerms" class="term-checkbox" required>
+                    <label for="agreeTerms">이용약관 동의 (필수) <a href="#" class="terms-link">보기</a></label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreePrivacy" class="term-checkbox" required>
+                    <label for="agreePrivacy">개인정보처리방침 동의 (필수) <a href="#" class="terms-link">보기</a></label>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="agreeMarketing" class="term-checkbox">
+                    <label for="agreeMarketing">마케팅 정보 수신 동의 (선택)</label>
+                </div>
+            </div>
+
+            <button type="submit" class="signup-btn" id="signupBtn" disabled>회원가입</button>
+        </form>
+
+        <div class="login-link">
+            이미 계정이 있으신가요? <a href="login.html">로그인</a> | <a href="index.html">메인으로</a>
+        </div>
+    </div>
+
+    <script>
+        let emailChecked = false;
+        let users = JSON.parse(localStorage.getItem('users')) || [];
+
+        // 이메일 중복 확인
+        function checkEmail() {
+            const email = document.getElementById('email').value;
+            const emailStatus = document.getElementById('emailStatus');
+            const checkBtn = document.getElementById('emailCheckBtn');
+            
+            if (!email) {
+                showError('이메일을 입력해주세요.');
+                return;
+            }
+
+            // 이메일 형식 검사
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('올바른 이메일 형식이 아닙니다.');
+                return;
+            }
+
+            // 중복 확인
+            const existingUser = users.find(user => user.email === email);
+            if (existingUser) {
+                emailStatus.textContent = '이미 사용중인 이메일입니다.';
+                emailStatus.style.color = '#dc3545';
+                checkBtn.textContent = '중복확인';
+                checkBtn.classList.remove('success');
+                emailChecked = false;
+            } else {
+                emailStatus.textContent = '사용 가능한 이메일입니다.';
+                emailStatus.style.color = '#28a745';
+                checkBtn.textContent = '확인완료';
+                checkBtn.classList.add('success');
+                emailChecked = true;
+                hideError();
+            }
+            
+            checkFormValidity();
+        }
+
+        // 비밀번호 확인
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = this.value;
+            const passwordStatus = document.getElementById('passwordStatus');
+            
+            if (confirmPassword) {
+                if (password === confirmPassword) {
+                    passwordStatus.textContent = '비밀번호가 일치합니다.';
+                    passwordStatus.style.color = '#28a745';
+                } else {
+                    passwordStatus.textContent = '비밀번호가 일치하지 않습니다.';
+                    passwordStatus.style.color = '#dc3545';
+                }
+            } else {
+                passwordStatus.textContent = '';
+            }
+            
+            checkFormValidity();
+        });
+
+        // 이메일 변경시 중복확인 초기화
+        document.getElementById('email').addEventListener('input', function() {
+            emailChecked = false;
+            document.getElementById('emailStatus').textContent = '';
+            const checkBtn = document.getElementById('emailCheckBtn');
+            checkBtn.textContent = '중복확인';
+            checkBtn.classList.remove('success');
+            checkFormValidity();
+        });
+
+        // 전체 동의 체크박스
+        function toggleAllTerms() {
+            const agreeAll = document.getElementById('agreeAll').checked;
+            const termCheckboxes = document.querySelectorAll('.term-checkbox');
+            
+            termCheckboxes.forEach(checkbox => {
+                checkbox.checked = agreeAll;
+            });
+            
+            checkFormValidity();
+        }
+
+        // 개별 약관 체크시 전체 동의 상태 업데이트
+        document.querySelectorAll('.term-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const termCheckboxes = document.querySelectorAll('.term-checkbox');
+                const allChecked = Array.from(termCheckboxes).every(cb => cb.checked);
+                document.getElementById('agreeAll').checked = allChecked;
+                checkFormValidity();
+            });
+        });
+
+        // 폼 유효성 검사
+        function checkFormValidity() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            const agreePrivacy = document.getElementById('agreePrivacy').checked;
+            
+            const isValid = emailChecked && 
+                           password.length >= 8 && 
+                           password === confirmPassword && 
+                           name && phone && 
+                           agreeTerms && agreePrivacy;
+            
+            document.getElementById('signupBtn').disabled = !isValid;
+        }
+
+        // 폼 제출
+        document.getElementById('signupForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!emailChecked) {
+                showError('이메일 중복확인을 해주세요.');
+                return;
+            }
+
+            const formData = {
+                id: Date.now(),
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                agreeMarketing: document.getElementById('agreeMarketing').checked,
+                joinDate: new Date().toISOString().split('T')[0],
+                status: 'active'
+            };
+
+            users.push(formData);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            showSuccess('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
+            
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+        });
+
+        // 에러/성공 메시지 표시
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // 모든 입력 필드에 이벤트 리스너 추가
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', checkFormValidity);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장바구니 - GRDR STUDIO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background: #f8f9fa; }
+        
+        /* 헤더 (메인 페이지와 동일) */
+        header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: fixed; width: 100%; top: 0; z-index: 1000; }
+        .header-top { background: #f8f9fa; padding: 8px 0; font-size: 12px; text-align: center; color: #666; }
+        .header-main { padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 28px; font-weight: bold; color: #ff6b6b; text-decoration: none; }
+        .search-bar { flex: 1; max-width: 400px; margin: 0 40px; position: relative; }
+        .search-bar input { width: 100%; padding: 12px 50px 12px 20px; border: 2px solid #e9ecef; border-radius: 25px; font-size: 14px; outline: none; }
+        .search-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #666; cursor: pointer; }
+        .header-icons { display: flex; gap: 20px; align-items: center; }
+        .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #666; position: relative; }
+        .cart-count { position: absolute; top: -8px; right: -8px; background: #ff6b6b; color: white; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        
+        /* 메인 컨텐츠 */
+        main { margin-top: 100px; padding: 40px 0; min-height: 60vh; }
+        .page-title { font-size: 32px; font-weight: 700; text-align: center; margin-bottom: 40px; color: #2c3e50; }
+        
+        /* 장바구니 */
+        .cart-container { background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); overflow: hidden; }
+        .cart-header { background: #f8f9fa; padding: 20px; border-bottom: 1px solid #e9ecef; font-weight: 600; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; gap: 20px; align-items: center; }
+        .cart-item { padding: 20px; border-bottom: 1px solid #f1f3f4; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 80px; gap: 20px; align-items: center; }
+        .cart-item:last-child { border-bottom: none; }
+        
+        .item-info { display: flex; gap: 15px; align-items: center; }
+        .item-image { width: 80px; height: 80px; background: linear-gradient(45deg, #a8edea, #fed6e3); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .item-image img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+        .item-details h4 { font-size: 16px; margin-bottom: 5px; color: #2c3e50; }
+        .item-category { font-size: 12px; color: #666; background: #f8f9fa; padding: 2px 8px; border-radius: 12px; }
+        
+        .item-price { font-size: 18px; font-weight: 600; color: #2c3e50; }
+        .item-quantity { display: flex; align-items: center; gap: 10px; }
+        .qty-btn { width: 30px; height: 30px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 5px; display: flex; align-items: center; justify-content: center; }
+        .qty-btn:hover { background: #f8f9fa; border-color: #ff6b6b; }
+        .qty-input { width: 50px; text-align: center; border: 1px solid #ddd; border-radius: 5px; padding: 5px; }
+        
+        .item-total { font-size: 18px; font-weight: 700; color: #ff6b6b; }
+        .remove-btn { background: #e74c3c; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .remove-btn:hover { background: #c0392b; }
+        
+        /* 장바구니 요약 */
+        .cart-summary { background: #f8f9fa; padding: 30px; margin-top: 30px; border-radius: 15px; }
+        .summary-row { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .summary-row.total { font-size: 20px; font-weight: 700; color: #2c3e50; border-top: 2px solid #e9ecef; padding-top: 15px; margin-top: 20px; }
+        
+        .cart-actions { display: flex; gap: 15px; margin-top: 30px; }
+        .btn { padding: 15px 30px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; flex: 1; }
+        .btn-primary { background: #ff6b6b; color: white; }
+        .btn-primary:hover { background: #ff5252; transform: translateY(-2px); }
+        .btn-secondary { background: white; color: #666; border: 2px solid #e9ecef; }
+        .btn-secondary:hover { border-color: #ff6b6b; color: #ff6b6b; }
+        
+        .empty-cart { text-align: center; padding: 80px 20px; }
+        .empty-cart h3 { font-size: 24px; color: #666; margin-bottom: 20px; }
+        .empty-cart p { color: #999; margin-bottom: 30px; }
+        
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .cart-header, .cart-item { grid-template-columns: 1fr; gap: 15px; text-align: center; }
+            .item-info { justify-content: center; }
+            .cart-actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">🎉 신규 회원 가입시 10% 할인 쿠폰 증정! 무료배송 이벤트 진행중 🎉</div>
+        <div class="header-main">
+            <div class="container">
+                <div class="header-content">
+                    <a href="index.html" class="logo">GRDR STUDIO</a>
+                    <div class="search-bar">
+                        <input type="text" placeholder="원하는 상품을 검색해보세요">
+                        <button class="search-btn">🔍</button>
+                    </div>
+                    <div class="header-icons">
+                        <button class="icon-btn">👤</button>
+                        <button class="icon-btn">❤️</button>
+                        <button class="icon-btn" onclick="window.location.href='cart.html'">
+                            🛒
+                            <span class="cart-count" id="cartCount">0</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1 class="page-title">장바구니</h1>
+            
+            <div id="cartContent">
+                <!-- 장바구니 내용이 여기에 동적으로 추가됩니다 -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 장바구니 데이터
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        const products = JSON.parse(localStorage.getItem('products')) || [];
+        const categories = JSON.parse(localStorage.getItem('categories')) || [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCart();
+            updateCartCount();
+        });
+
+        function loadCart() {
+            const cartContent = document.getElementById('cartContent');
+            
+            if (cart.length === 0) {
+                cartContent.innerHTML = `
+                    <div class="empty-cart">
+                        <h3>장바구니가 비어있습니다</h3>
+                        <p>원하는 상품을 장바구니에 담아보세요!</p>
+                        <button class="btn btn-primary" onclick="window.location.href='index.html'">쇼핑 계속하기</button>
+                    </div>
+                `;
+                return;
+            }
+
+            let cartHTML = `
+                <div class="cart-container">
+                    <div class="cart-header">
+                        <div>상품정보</div>
+                        <div>단가</div>
+                        <div>수량</div>
+                        <div>합계</div>
+                        <div></div>
+                    </div>
+            `;
+
+            let totalAmount = 0;
+
+            cart.forEach((item, index) => {
+                const product = products.find(p => p.id === item.productId);
+                if (!product) return;
+
+                const category = categories.find(c => c.slug === product.category);
+                const categoryName = category ? category.name : '미분류';
+                const itemTotal = product.price * item.quantity;
+                totalAmount += itemTotal;
+
+                cartHTML += `
+                    <div class="cart-item">
+                        <div class="item-info">
+                            <div class="item-image">
+                                ${product.image ? `<img src="${product.image}" alt="${product.name}">` : '📦'}
+                            </div>
+                            <div class="item-details">
+                                <h4>${product.name}</h4>
+                                <span class="item-category">${categoryName}</span>
+                            </div>
+                        </div>
+                        <div class="item-price">₩${product.price.toLocaleString()}</div>
+                        <div class="item-quantity">
+                            <button class="qty-btn" onclick="updateQuantity(${index}, -1)">-</button>
+                            <input type="number" class="qty-input" value="${item.quantity}" min="1" onchange="setQuantity(${index}, this.value)">
+                            <button class="qty-btn" onclick="updateQuantity(${index}, 1)">+</button>
+                        </div>
+                        <div class="item-total">₩${itemTotal.toLocaleString()}</div>
+                        <button class="remove-btn" onclick="removeFromCart(${index})">삭제</button>
+                    </div>
+                `;
+            });
+
+            cartHTML += `</div>`;
+
+            // 장바구니 요약
+            cartHTML += `
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>상품금액</span>
+                        <span>₩${totalAmount.toLocaleString()}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>배송비</span>
+                        <span>${totalAmount >= 50000 ? '무료' : '₩3,000'}</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>총 결제금액</span>
+                        <span>₩${(totalAmount + (totalAmount >= 50000 ? 0 : 3000)).toLocaleString()}</span>
+                    </div>
+                    <div class="cart-actions">
+                        <button class="btn btn-secondary" onclick="window.location.href='index.html'">쇼핑 계속하기</button>
+                        <button class="btn btn-primary" onclick="checkout()">주문하기</button>
+                    </div>
+                </div>
+            `;
+
+            cartContent.innerHTML = cartHTML;
+        }
+
+        function updateQuantity(index, change) {
+            cart[index].quantity += change;
+            if (cart[index].quantity < 1) {
+                cart[index].quantity = 1;
+            }
+            saveCart();
+            loadCart();
+            updateCartCount();
+        }
+
+        function setQuantity(index, quantity) {
+            const qty = parseInt(quantity);
+            if (qty > 0) {
+                cart[index].quantity = qty;
+                saveCart();
+                loadCart();
+                updateCartCount();
+            }
+        }
+
+        function removeFromCart(index) {
+            if (confirm('이 상품을 장바구니에서 제거하시겠습니까?')) {
+                cart.splice(index, 1);
+                saveCart();
+                loadCart();
+                updateCartCount();
+            }
+        }
+
+      
+        function saveCart() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+        }
+
+        function updateCartCount() {
+            const count = cart.reduce((total, item) => total + item.quantity, 0);
+            const cartCountElement = document.getElementById('cartCount');
+            if (cartCountElement) {
+                cartCountElement.textContent = count;
+            }
+        }
+
+        function checkout() {
+            if (cart.length === 0) {
+                alert('장바구니가 비어있습니다.');
+                return;
+            }
+            alert('주문 기능은 개발 예정입니다.');
+        }
+    </script>
+</body>
+</html>
+

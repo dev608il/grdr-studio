@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지 - GRDR STUDIO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; }
+        
+        /* 헤더 (메인 페이지와 동일) */
+        header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: fixed; width: 100%; top: 0; z-index: 1000; }
+        .header-top { background: #f8f9fa; padding: 8px 0; font-size: 12px; text-align: center; color: #666; }
+        .header-main { padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 28px; font-weight: bold; color: #ff6b6b; text-decoration: none; }
+        .search-bar { flex: 1; max-width: 400px; margin: 0 40px; position: relative; }
+        .search-bar input { width: 100%; padding: 12px 50px 12px 20px; border: 2px solid #e9ecef; border-radius: 25px; font-size: 14px; outline: none; }
+        .search-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #666; cursor: pointer; }
+        .header-icons { display: flex; gap: 20px; align-items: center; }
+        .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #666; }
+        
+        /* 메인 컨텐츠 */
+        main { margin-top: 100px; padding: 40px 0; min-height: 70vh; }
+        .mypage-container { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
+        
+        /* 사이드바 */
+        .mypage-sidebar { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); height: fit-content; }
+        .user-info { text-align: center; padding-bottom: 20px; border-bottom: 1px solid #e9ecef; margin-bottom: 20px; }
+        .user-avatar { width: 80px; height: 80px; background: linear-gradient(45deg, #ff6b6b, #ffa8a8); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 15px; }
+        .user-name { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
+        .user-email { font-size: 14px; color: #666; }
+        
+        .mypage-menu { list-style: none; }
+        .mypage-menu li { margin-bottom: 5px; }
+        .mypage-menu a { display: block; padding: 12px 15px; text-decoration: none; color: #333; border-radius: 8px; transition: background 0.3s; }
+        .mypage-menu a:hover, .mypage-menu a.active { background: #ff6b6b; color: white; }
+        
+        /* 메인 컨텐츠 */
+        .mypage-content { background: white; border-radius: 15px; padding: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .section-title { font-size: 24px; margin-bottom: 20px; color: #2c3e50; border-bottom: 2px solid #ff6b6b; padding-bottom: 10px; }
+        
+        /* 프로필 수정 */
+        .profile-form { max-width: 600px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50; }
+        .form-control { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .form-control:focus { outline: none; border-color: #ff6b6b; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s; }
+        .btn-primary { background: #ff6b6b; color: white; }
+        .btn-primary:hover { background: #ff5252; }
+        .btn-secondary { background: #6c757d; color: white; margin-left: 10px; }
+        
+        /* 주문 내역 */
+        .order-list { margin-top: 20px; }
+        .order-item { background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 15px; border-left: 4px solid #ff6b6b; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .order-number { font-weight: 600; color: #2c3e50; }
+        .order-date { color: #666; font-size: 14px; }
+        .order-status { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-completed { background: #d4edda; color: #155724; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        
+        .order-products { margin-bottom: 15px; }
+        .order-product { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
+        .product-image { width: 60px; height: 60px; background: linear-gradient(45deg, #a8edea, #fed6e3); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .product-info h4 { font-size: 14px; margin-bottom: 5px; }
+        .product-info p { font-size: 12px; color: #666; }
+        
+        .order-total { text-align: right; font-size: 16px; font-weight: 600; color: #ff6b6b; }
+        
+        /* 통계 카드 */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: linear-gradient(45deg, #667eea, #764ba2); color: white; padding: 25px; border-radius: 15px; text-align: center; }
+        .stat-number { font-size: 32px; font-weight: 700; margin-bottom: 5px; }
+        .stat-label { font-size: 14px; opacity: 0.9; }
+        
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .mypage-container { grid-template-columns: 1fr; }
+            .mypage-sidebar { order: 2; }
+            .mypage-content { order: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <header>
+        <div class="header-top">🎉 신규 회원 가입시 10% 할인 쿠폰 증정! 무료배송 이벤트 진행중 🎉</div>
+        <div class="header-main">
+            <div class="container">
+                <div class="header-content">
+                    <a href="index.html" class="logo">GRDR STUDIO</a>
+                    <div class="search-bar">
+                        <input type="text" placeholder="원하는 상품을 검색해보세요">
+                        <button class="search-btn">🔍</button>
+                    </div>
+                    <div class="header-icons">
+                        <button class="icon-btn" onclick="window.location.href='mypage.html'">👤</button>
+                        <button class="icon-btn">❤️</button>
+                        <button class="icon-btn" onclick="window.location.href='cart.html'">🛒</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main>
+        <div class="container">
+            <div class="mypage-container">
+                <!-- 사이드바 -->
+                <div class="mypage-sidebar">
+                    <div class="user-info">
+                        <div class="user-avatar">👤</div>
+                        <div class="user-name" id="userName">사용자</div>
+                        <div class="user-email" id="userEmail">user@email.com</div>
+                    </div>
+                    <ul class="mypage-menu">
+                        <li><a href="#dashboard" class="menu-link active" data-section="dashboard">대시보드</a></li>
+                        <li><a href="#profile" class="menu-link" data-section="profile">프로필 수정</a></li>
+                        <li><a href="#orders" class="menu-link" data-section="orders">주문 내역</a></li>
+                        <li><a href="#wishlist" class="menu-link" data-section="wishlist">찜한 상품</a></li>
+                        <li><a href="#reviews" class="menu-link" data-section="reviews">내 리뷰</a></li>
+                        <li><a href="#inquiries" class="menu-link" data-section="inquiries">문의 내역</a></li>
+                        <li><a href="#" onclick="logout()" style="color: #dc3545;">로그아웃</a></li>
+                    </ul>
+                </div>
+
+                <!-- 메인 컨텐츠 -->
+                <div class="mypage-content">
+                    <!-- 대시보드 -->
+                    <div id="dashboard" class="content-section active">
+                        <h2 class="section-title">대시보드</h2>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalOrders">0</div>
+                                <div class="stat-label">총 주문 수</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalSpent">₩0</div>
+                                <div class="stat-label">총 구매 금액</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalReviews">0</div>
+                                <div class="stat-label">작성한 리뷰</div>
+                            </div>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 20px;">최근 주문</h3>
+                        <div id="recentOrders">
+                            <p style="text-align: center; color: #666; padding: 40px;">주문 내역이 없습니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- 프로필 수정 -->
+                    <div id="profile" class="content-section">
+                        <h2 class="section-title">프로필 수정</h2>
+                        <form class="profile-form" id="profileForm">
+                            <div class="form-group">
+                                <label for="profileName">이름</label>
+                                <input type="text" id="profileName" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileEmail">이메일</label>
+                                <input type="email" id="profileEmail" class="form-control" readonly style="background: #f8f9fa;">
+                            </div>
+                            <div class="form-group">
+                                <label for="profilePhone">휴대폰 번호</label>
+                                <input type="tel" id="profilePhone" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="profileAddress">주소</label>
+                                <input type="text" id="profileAddress" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="currentPassword">현재 비밀번호</label>
+                                <input type="password" id="currentPassword" class="form-control" placeholder="비밀번호 변경시에만 입력">
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">새 비밀번호</label>
+                                <input type="password" id="newPassword" class="form-control" placeholder="변경할 비밀번호 (8자 이상)">
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmNewPassword">새 비밀번호 확인</label>
+                                <input type="password" id="confirmNewPassword" class="form-control" placeholder="새 비밀번호 다시 입력">
+                            </div>
+                            <button type="submit" class="btn btn-primary">프로필 수정</button>
+                            <button type="button" class="btn btn-secondary" onclick="resetForm()">취소</button>
+                        </form>
+                    </div>
+
+                    <!-- 주문 내역 -->
+                    <div id="orders" class="content-section">
+                        <h2 class="section-title">주문 내역</h2>
+                        <div class="order-list" id="orderList">
+                            <p style="text-align: center; color: #666; padding: 40px;">주문 내역이 없습니다.</p>
+                        </div>
+                    </div>
+                                        <!-- 찜한 상품 -->
+                    <div id="wishlist" class="content-section">
+                        <h2 class="section-title">찜한 상품</h2>
+                        <div id="wishlistItems">
+                            <p style="text-align: center; color: #666; padding: 40px;">찜한 상품이 없습니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- 내 리뷰 -->
+                    <div id="reviews" class="content-section">
+                        <h2 class="section-title">내 리뷰</h2>
+                        <div id="myReviews">
+                            <p style="text-align: center; color: #666; padding: 40px;">작성한 리뷰가 없습니다.</p>
+                        </div>
+                    </div>
+
+                    <!-- 문의 내역 -->
+                    <div id="inquiries" class="content-section">
+                        <h2 class="section-title">문의 내역</h2>
+                        <div id="myInquiries">
+                            <p style="text-align: center; color: #666; padding: 40px;">문의 내역이 없습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 로그인 체크
+        if (!sessionStorage.getItem('userLoggedIn')) {
+            alert('로그인이 필요합니다.');
+            sessionStorage.setItem('returnUrl', 'mypage.html');
+            window.location.href = 'login.html';
+        }
+
+        const currentUser = JSON.parse(sessionStorage.getItem('currentUser') || '{}');
+        const users = JSON.parse(localStorage.getItem('users')) || [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            setupMenuEvents();
+            loadDashboard();
+        });
+
+        function loadUserInfo() {
+            const user = users.find(u => u.id === currentUser.id);
+            if (user) {
+                document.getElementById('userName').textContent = user.name;
+                document.getElementById('userEmail').textContent = user.email;
+                
+                // 프로필 폼에 데이터 채우기
+                document.getElementById('profileName').value = user.name;
+                document.getElementById('profileEmail').value = user.email;
+                document.getElementById('profilePhone').value = user.phone || '';
+                document.getElementById('profileAddress').value = user.address || '';
+            }
+        }
+
+        function setupMenuEvents() {
+            const menuLinks = document.querySelectorAll('.menu-link');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    menuLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    contentSections.forEach(section => section.classList.remove('active'));
+                    
+                    const targetSection = this.getAttribute('data-section');
+                    const targetElement = document.getElementById(targetSection);
+                    if (targetElement) {
+                        targetElement.classList.add('active');
+                        
+                        // 각 섹션별 데이터 로딩
+                        if (targetSection === 'orders') {
+                            loadOrders();
+                        } else if (targetSection === 'reviews') {
+                            loadMyReviews();
+                        }
+                    }
+                });
+            });
+        }
+
+        function loadDashboard() {
+            // 임시 데이터 (실제로는 주문 데이터에서 계산)
+            document.getElementById('totalOrders').textContent = '3';
+            document.getElementById('totalSpent').textContent = '₩67,000';
+            document.getElementById('totalReviews').textContent = '2';
+        }
+
+        function loadOrders() {
+            // 임시 주문 데이터
+            const orderList = document.getElementById('orderList');
+            orderList.innerHTML = `
+                <div class="order-item">
+                    <div class="order-header">
+                        <span class="order-number">주문번호: #ORD001</span>
+                        <span class="order-date">2024-01-15</span>
+                        <span class="order-status status-completed">배송완료</span>
+                    </div>
+                    <div class="order-products">
+                        <div class="order-product">
+                            <div class="product-image">📦</div>
+                            <div class="product-info">
+                                <h4>귀여운 고양이 스티커 세트</h4>
+                                <p>수량: 2개</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-total">총 결제금액: ₩30,000</div>
+                </div>
+            `;
+        }
+
+        function loadMyReviews() {
+            const myReviews = document.getElementById('myReviews');
+            myReviews.innerHTML = `
+                <div style="border: 1px solid #e9ecef; border-radius: 10px; padding: 20px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <strong>귀여운 고양이 스티커 세트</strong>
+                        <span style="color: #ff6b6b;">⭐⭐⭐⭐⭐</span>
+                    </div>
+                    <p style="color: #666; margin-bottom: 10px;">정말 귀엽고 품질도 좋아요! 다이어리 꾸미기에 딱 좋네요 😊</p>
+                    <small style="color: #999;">2024-01-15 작성</small>
+                </div>
+            `;
+        }
+
+        // 프로필 수정
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userIndex = users.findIndex(u => u.id === currentUser.id);
+            if (userIndex === -1) return;
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+            
+            // 비밀번호 변경 체크
+            if (newPassword) {
+                if (!currentPassword) {
+                    alert('현재 비밀번호를 입력해주세요.');
+                    return;
+                }
+                if (users[userIndex].password !== currentPassword) {
+                    alert('현재 비밀번호가 올바르지 않습니다.');
+                    return;
+                }
+                if (newPassword.length < 8) {
+                    alert('새 비밀번호는 8자 이상이어야 합니다.');
+                    return;
+                }
+                if (newPassword !== confirmNewPassword) {
+                    alert('새 비밀번호가 일치하지 않습니다.');
+                    return;
+                }
+                users[userIndex].password = newPassword;
+            }
+            
+            // 프로필 정보 업데이트
+            users[userIndex].name = document.getElementById('profileName').value;
+            users[userIndex].phone = document.getElementById('profilePhone').value;
+            users[userIndex].address = document.getElementById('profileAddress').value;
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // 현재 사용자 세션 정보도 업데이트
+            currentUser.name = users[userIndex].name;
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            alert('프로필이 수정되었습니다.');
+            loadUserInfo();
+            resetForm();
+        });
+
+        function resetForm() {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+        }
+
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                sessionStorage.removeItem('userLoggedIn');
+                sessionStorage.removeItem('currentUser');
+                alert('로그아웃 되었습니다.');
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>
+

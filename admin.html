@@ -1,0 +1,1262 @@
+html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRDR STUDIO - 관리자 대시보드</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; color: #333; }
+        .sidebar { position: fixed; left: 0; top: 0; width: 250px; height: 100vh; background: #2c3e50; color: white; overflow-y: auto; z-index: 1000; }
+        .sidebar-header { padding: 20px; background: #34495e; text-align: center; }
+        .sidebar-header h2 { color: #ff6b6b; font-size: 20px; }
+        .sidebar-menu { list-style: none; padding: 20px 0; }
+        .sidebar-menu li { margin-bottom: 5px; }
+        .sidebar-menu a { display: flex; align-items: center; padding: 15px 20px; color: #ecf0f1; text-decoration: none; transition: background 0.3s; }
+        .sidebar-menu a:hover, .sidebar-menu a.active { background: #ff6b6b; }
+        .main-content { margin-left: 250px; padding: 20px; }
+        .admin-header { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-header h1 { color: #2c3e50; }
+        .admin-user { display: flex; align-items: center; gap: 10px; }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
+        .logout-btn:hover { background: #c0392b; }
+        .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .dashboard-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; transition: transform 0.3s; }
+        .dashboard-card:hover { transform: translateY(-5px); }
+        .dashboard-card .icon { font-size: 48px; margin-bottom: 15px; }
+        .dashboard-card h3 { font-size: 24px; margin-bottom: 10px; color: #2c3e50; }
+        .dashboard-card p { color: #7f8c8d; font-size: 14px; }
+        .content-section { background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; display: none; }
+        .content-section.active { display: block; }
+        .section-header { padding: 20px; border-bottom: 1px solid #ecf0f1; display: flex; justify-content: space-between; align-items: center; }
+        .section-header h2 { color: #2c3e50; }
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; transition: background 0.3s; margin: 2px; }
+        .btn-primary { background: #ff6b6b; color: white; }
+        .btn-primary:hover { background: #ff5252; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+        .data-table th { background: #f8f9fa; font-weight: 600; color: #2c3e50; }
+        .data-table tr:hover { background: #f8f9fa; }
+        .status-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-processing { background: #cce5ff; color: #004085; }
+        .status-completed { background: #d4edda; color: #155724; }
+        @media (max-width: 768px) { .sidebar { transform: translateX(-100%); transition: transform 0.3s; } .main-content { margin-left: 0; } .dashboard-cards { grid-template-columns: 1fr; } }
+            /* 모달 스타일 */
+            .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .modal-header h3 {
+            color: #2c3e50;
+            margin: 0;
+        }
+
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #aaa;
+            font-weight: bold;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #ecf0f1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .product-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .no-image {
+            width: 60px;
+            height: 60px;
+            background: #f8f9fa;
+            border: 1px dashed #dee2e6;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        .category-preview {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-icon {
+            font-size: 20px;
+        }
+
+        .category-count {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>GRDR STUDIO</h2>
+            <p>관리자 패널</p>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#dashboard" class="menu-link active" data-section="dashboard">📊 대시보드</a></li>
+            <li><a href="#categories" class="menu-link" data-section="categories">📁 카테고리 관리</a></li>
+            <li><a href="#products" class="menu-link" data-section="products">📦 상품 관리</a></li>
+            <li><a href="#orders" class="menu-link" data-section="orders">🛒 주문 관리</a></li>
+            <li><a href="#reviews" class="menu-link" data-section="reviews">⭐ 리뷰 관리</a></li>
+            <li><a href="#customers" class="menu-link" data-section="customers">👥 고객 관리</a></li>
+            <li><a href="#inquiries" class="menu-link" data-section="inquiries">💬 문의 관리</a></li>
+            <li><a href="#admins" class="menu-link" data-section="admins">🔐 관리자 계정</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <div class="admin-header">
+            <h1>관리자 대시보드</h1>
+            <div class="admin-user">
+    <span id="adminWelcome">관리자님 환영합니다!</span>
+    <button class="logout-btn">로그아웃</button>
+</div>
+
+        </div>
+        <div id="dashboard" class="content-section active">
+            <div class="dashboard-cards">
+                <div class="dashboard-card"><div class="icon">📦</div><h3>156</h3><p>총 상품 수</p></div>
+                <div class="dashboard-card"><div class="icon">🛒</div><h3>89</h3><p>오늘 주문</p></div>
+                <div class="dashboard-card"><div class="icon">👥</div><h3>1,234</h3><p>총 고객 수</p></div>
+                <div class="dashboard-card"><div class="icon">💰</div><h3>₩2,450,000</h3><p>이번 달 매출</p></div>
+            </div>
+            <div class="section-header"><h2>최근 주문 현황</h2></div>
+            <table class="data-table">
+                <thead><tr><th>주문번호</th><th>고객명</th><th>상품</th><th>금액</th><th>상태</th><th>주문일시</th></tr></thead>
+                <tbody>
+                    <tr><td>#ORD001</td><td>김민지</td><td>귀여운 고양이 스티커 세트</td><td>₩15,000</td><td><span class="status-badge status-processing">배송중</span></td><td>2024-01-15 14:30</td></tr>
+                    <tr><td>#ORD002</td><td>이서연</td><td>파스텔 마스킹테이프 5종</td><td>₩25,000</td><td><span class="status-badge status-completed">배송완료</span></td><td>2024-01-15 13:15</td></tr>
+                </tbody>
+            </table>
+        </div>
+                <!-- 카테고리 관리 섹션 -->
+                <div id="categories" class="content-section">
+                    <div class="section-header">
+                        <h2>카테고리 관리</h2>
+                        <button class="btn btn-primary" onclick="openCategoryModal()">새 카테고리 추가</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>카테고리 ID</th>
+                                <th>카테고리명</th>
+                                <th>영문명 (URL용)</th>
+                                <th>아이콘</th>
+                                <th>상품 수</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoryTableBody">
+                            <!-- 카테고리 목록이 여기에 동적으로 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+        
+                <!-- 카테고리 등록/수정 모달 -->
+                <div id="categoryModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="categoryModalTitle">새 카테고리 추가</h3>
+                            <span class="close" onclick="closeCategoryModal()">&times;</span>
+                        </div>
+                        <form id="categoryForm">
+                            <div class="form-group">
+                                <label for="categoryName">카테고리명 *</label>
+                                <input type="text" id="categoryName" class="form-control" required placeholder="예: 스티커">
+                            </div>
+                            <div class="form-group">
+                                <label for="categorySlug">영문명 (URL용) *</label>
+                                <input type="text" id="categorySlug" class="form-control" required placeholder="예: stickers">
+                                <small style="color: #666; font-size: 12px;">영문, 숫자, 하이픈(-)만 사용 가능</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoryIcon">아이콘 (이모지)</label>
+                                <input type="text" id="categoryIcon" class="form-control" placeholder="예: 🏷️">
+                                <small style="color: #666; font-size: 12px;">이모지를 복사해서 붙여넣으세요</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoryDescription">카테고리 설명</label>
+                                <textarea id="categoryDescription" class="form-control" rows="3" placeholder="카테고리에 대한 간단한 설명"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="categoryStatus">상태</label>
+                                <select id="categoryStatus" class="form-control">
+                                    <option value="active">활성</option>
+                                    <option value="inactive">비활성</option>
+                                </select>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">취소</button>
+                                <button type="submit" class="btn btn-primary">저장</button>
+                            </div>
+                           
+        
+                        </form>
+                    </div>
+                </div>
+        
+                <div id="products" class="content-section">
+                    <div class="section-header">
+                        <h2>상품 관리</h2>
+                        <button class="btn btn-primary" onclick="openProductModal()">새 상품 등록</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>상품ID</th>
+                                <th>이미지</th>
+                                <th>상품명</th>
+                                <th>카테고리</th>
+                                <th>가격</th>
+                                <th>재고</th>
+                                <th>상태</th>
+                                <th>관리</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productTableBody">
+                            <!-- 상품 목록이 여기에 동적으로 추가됩니다 -->
+                        </tbody>
+                    </table>
+                </div>
+        
+                <!-- 상품 등록/수정 모달 -->
+                <div id="productModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="modalTitle">새 상품 등록</h3>
+                            <span class="close" onclick="closeProductModal()">&times;</span>
+                        </div>
+                        <form id="productForm">
+                            <div class="form-group">
+                                <label for="productName">상품명 *</label>
+                                <input type="text" id="productName" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productCategory">카테고리 *</label>
+                                <select id="productCategory" class="form-control" required>
+                                    <option value="">카테고리 선택</option>
+                                    <option value="stickers">스티커</option>
+                                    <option value="masking-tape">마스킹테이프</option>
+                                    <option value="clips">캐릭터 클립</option>
+                                    <option value="memo">메모지</option>
+                                    <option value="accessories">액세서리</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="productPrice">가격 *</label>
+                                <div style="position: relative;">
+                                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #666; font-weight: 600;">₩</span>
+                                    <input type="text" id="productPrice" class="form-control" required placeholder="예: 15000" 
+                                           style="padding-left: 30px;" 
+                                           oninput="formatPrice(this)"
+                                           onkeypress="return isNumberKey(event)">
+                                </div>
+                                <small style="color: #666; font-size: 12px;">숫자만 입력하세요 (쉼표는 자동으로 추가됩니다)</small>
+                            </div>
+        
+                            <div class="form-group">
+                                <label for="productStock">재고 수량 *</label>
+                                <div style="position: relative;">
+                                    <input type="text" id="productStock" class="form-control" required placeholder="예: 50" 
+                                           oninput="formatStock(this)"
+                                           onkeypress="return isNumberKey(event)">
+                                    <span style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #666; font-weight: 600;">개</span>
+                                </div>
+                                <small style="color: #666; font-size: 12px;">숫자만 입력하세요 (쉼표는 자동으로 추가됩니다)</small>
+                            </div>
+        
+                            <div class="form-group">
+                                <label for="productImage">상품 이미지 URL</label>
+                                <input type="url" id="productImage" class="form-control" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <div class="form-group">
+                                <label for="productDescription">상품 설명</label>
+                                <textarea id="productDescription" class="form-control" rows="4" placeholder="상품에 대한 자세한 설명을 입력하세요"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="productStatus">판매 상태</label>
+                                <select id="productStatus" class="form-control">
+                                    <option value="active">판매중</option>
+                                    <option value="inactive">판매중지</option>
+                                    <option value="soldout">품절</option>
+                                </select>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" onclick="closeProductModal()">취소</button>
+                                <button type="submit" class="btn btn-primary">저장</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+        
+        <div id="orders" class="content-section">
+            <div class="section-header"><h2>주문 관리</h2></div>
+            <table class="data-table">
+                <thead><tr><th>주문번호</th><th>고객명</th><th>상품</th><th>수량</th><th>금액</th><th>상태</th><th>관리</th></tr></thead>
+                <tbody>
+                    <tr><td>#ORD001</td><td>김민지</td><td>고양이 스티커</td><td>2개</td><td>₩30,000</td><td><span class="status-badge status-processing">배송중</span></td><td><button class="btn btn-warning">상태변경</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="reviews" class="content-section">
+            <div class="section-header">
+                <h2>리뷰 관리</h2>
+                <div>
+                    <select id="reviewFilter" onchange="filterReviews()" style="padding: 8px; margin-right: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                        <option value="all">전체 리뷰</option>
+                        <option value="5">⭐⭐⭐⭐⭐ (5점)</option>
+                        <option value="4">⭐⭐⭐⭐ (4점)</option>
+                        <option value="3">⭐⭐⭐ (3점)</option>
+                        <option value="2">⭐⭐ (2점)</option>
+                        <option value="1">⭐ (1점)</option>
+                    </select>
+                </div>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>리뷰ID</th>
+                        <th>상품명</th>
+                        <th>고객명</th>
+                        <th>평점</th>
+                        <th>리뷰 내용</th>
+                        <th>작성일</th>
+                        <th>상태</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody id="reviewTableBody">
+                    <!-- 리뷰 목록이 여기에 동적으로 추가됩니다 -->
+                </tbody>
+            </table>
+        </div>
+        <div id="customers" class="content-section">
+            <div class="section-header"><h2>고객 관리</h2></div>
+            <p style="padding: 20px;">고객 관리 기능 (개발 예정)</p>
+        </div>
+        <div id="inquiries" class="content-section">
+            <div class="section-header"><h2>문의 관리</h2></div>
+            <p style="padding: 20px;">문의 관리 기능 (개발 예정)</p>
+        </div>
+                <!-- 관리자 계정 관리 섹션 -->
+        <div id="admins" class="content-section">
+            <div class="section-header">
+                <h2>관리자 계정 관리</h2>
+                <button class="btn btn-primary" onclick="openAdminModal()">새 관리자 추가</button>
+            </div>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>관리자ID</th>
+                        <th>아이디</th>
+                        <th>이름</th>
+                        <th>권한</th>
+                        <th>생성일</th>
+                        <th>최근 로그인</th>
+                        <th>상태</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody id="adminTableBody">
+                    <!-- 관리자 목록이 여기에 동적으로 추가됩니다 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 관리자 추가/수정 모달 -->
+        <div id="adminModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="adminModalTitle">새 관리자 추가</h3>
+                    <span class="close" onclick="closeAdminModal()">&times;</span>
+                </div>
+                <form id="adminForm">
+                    <div class="form-group">
+                        <label for="adminUsername">아이디 *</label>
+                        <input type="text" id="adminUsername" class="form-control" required placeholder="영문, 숫자 4-20자">
+                        <small style="color: #666; font-size: 12px;">영문, 숫자 조합 4-20자</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">비밀번호 *</label>
+                        <input type="password" id="adminPassword" class="form-control" required placeholder="8자 이상">
+                        <small style="color: #666; font-size: 12px;">영문, 숫자 포함 8자 이상</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminConfirmPassword">비밀번호 확인 *</label>
+                        <input type="password" id="adminConfirmPassword" class="form-control" required placeholder="비밀번호 다시 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminName">이름 *</label>
+                        <input type="text" id="adminName" class="form-control" required placeholder="관리자 이름">
+                    </div>
+                    <div class="form-group">
+                        <label for="adminRole">권한 *</label>
+                        <select id="adminRole" class="form-control" required>
+                            <option value="">권한 선택</option>
+                            <option value="super">최고 관리자</option>
+                            <option value="admin">일반 관리자</option>
+                            <option value="staff">직원</option>
+                        </select>
+                        <small style="color: #666; font-size: 12px;">
+                            최고 관리자: 모든 권한 | 일반 관리자: 상품/주문 관리 | 직원: 주문 처리만
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminStatus">상태</label>
+                        <select id="adminStatus" class="form-control">
+                            <option value="active">활성</option>
+                            <option value="inactive">비활성</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeAdminModal()">취소</button>
+                        <button type="submit" class="btn btn-primary">저장</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+                <!-- 리뷰 상세보기 모달 -->
+        <div id="reviewDetailModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>리뷰 상세 내용</h3>
+                    <span class="close" onclick="closeReviewDetailModal()">&times;</span>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="review-detail-info">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                            <div>
+                                <strong>리뷰 ID:</strong> <span id="detailReviewId"></span>
+                            </div>
+                            <div>
+                                <strong>작성일:</strong> <span id="detailReviewDate"></span>
+                            </div>
+                            <div>
+                                <strong>상품명:</strong> <span id="detailProductName"></span>
+                            </div>
+                            <div>
+                                <strong>고객명:</strong> <span id="detailCustomerName"></span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <strong>평점:</strong> 
+                            <span id="detailRating" style="font-size: 18px; color: #ff6b6b;"></span>
+                        </div>
+                        
+                        <div style="margin-bottom: 20px;">
+                            <strong>리뷰 내용:</strong>
+                            <div id="detailReviewContent" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px; line-height: 1.6; min-height: 100px;"></div>
+                        </div>
+                        
+                        <div>
+                            <strong>현재 상태:</strong> 
+                            <span id="detailReviewStatus" class="status-badge"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeReviewDetailModal()">닫기</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script>
+        // 보안 체크
+        if (!sessionStorage.getItem('adminLoggedIn')) {
+            alert('관리자 로그인이 필요합니다.');
+            window.location.href = 'admin-login.html';
+        }
+
+        // 데이터 저장소
+        let categories = JSON.parse(localStorage.getItem('categories')) || [
+            { id: 1, name: '스티커', slug: 'stickers', icon: '🏷️', description: '다양한 캐릭터 스티커', status: 'active' },
+            { id: 2, name: '마스킹테이프', slug: 'masking-tape', icon: '🎀', description: '예쁜 마스킹테이프', status: 'active' },
+            { id: 3, name: '캐릭터 클립', slug: 'clips', icon: '📎', description: '귀여운 캐릭터 클립', status: 'active' },
+            { id: 4, name: '메모지', slug: 'memo', icon: '📝', description: '사랑스러운 메모지', status: 'active' }
+        ];
+
+        let products = JSON.parse(localStorage.getItem('products')) || [
+            { id: 1, name: '귀여운 고양이 스티커 세트', category: 'stickers', price: 15000, stock: 50, image: '', description: '다양한 표정의 귀여운 고양이 스티커', status: 'active' },
+            { id: 2, name: '파스텔 마스킹테이프 5종', category: 'masking-tape', price: 25000, stock: 30, image: '', description: '파스텔 톤의 예쁜 마스킹테이프 세트', status: 'active' }
+        ];
+        let reviews = JSON.parse(localStorage.getItem('reviews')) || [
+    { id: 1, productId: 1, customerName: '김**', rating: 5, content: '정말 귀엽고 품질도 좋아요! 다이어리 꾸미기에 딱 좋네요 😊', date: '2024-01-15', status: 'approved' },
+    { id: 2, productId: 1, customerName: '이**', rating: 5, content: '배송도 빠르고 포장도 깔끔하게 잘 되어있어요. 재구매 의사 있습니다!', date: '2024-01-12', status: 'approved' },
+    { id: 3, productId: 2, customerName: '박**', rating: 4, content: '생각보다 크기가 작았지만 디자인이 너무 예뻐서 만족해요!', date: '2024-01-10', status: 'approved' },
+    { id: 4, productId: 1, customerName: '최**', rating: 3, content: '보통이에요. 가격 대비 그럭저럭...', date: '2024-01-08', status: 'pending' }
+];
+
+let admins = JSON.parse(localStorage.getItem('admins')) || [
+    { id: 1, username: 'admin', password: 'grdr2024', name: '최고관리자', role: 'super', status: 'active', createdDate: '2024-01-01', lastLogin: '2024-01-15 14:30' }
+];
+
+        let editingCategoryId = null;
+        let editingProductId = null;
+
+        // 페이지 로딩 완료 후 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            // 메뉴 클릭 이벤트
+            const menuLinks = document.querySelectorAll('.menu-link');
+            const contentSections = document.querySelectorAll('.content-section');
+
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    menuLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    contentSections.forEach(section => section.classList.remove('active'));
+                    
+                    const targetSection = this.getAttribute('data-section');
+                    const targetElement = document.getElementById(targetSection);
+                    if (targetElement) {
+                        targetElement.classList.add('active');
+                        
+                        // 각 섹션별 데이터 로딩
+                        if (targetSection === 'categories') {
+                            loadCategories();
+                        } else if (targetSection === 'products') {
+                            loadProducts();
+                            loadCategoryOptions();
+                        }
+                        }
+                        if (targetSection === 'reviews') {
+                            loadReviews();
+                            }
+                        if (targetSection === 'admins') {
+                            loadAdmins();
+                            }
+
+                });
+            });
+
+            // 로그아웃 버튼
+            const logoutBtn = document.querySelector('.logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function() {
+                    if (confirm('정말 로그아웃 하시겠습니까?')) {
+                        sessionStorage.clear();
+                        alert('로그아웃 되었습니다.');
+                        window.location.href = 'admin-login.html';
+                    }
+                });
+            }
+                
+    // ⭐ 여기에 관리자 정보 표시 코드 추가!   
+            const currentAdmin = JSON.parse(sessionStorage.getItem('currentAdmin') || '{}');
+    if (currentAdmin.name) {
+        const roleText = currentAdmin.role === 'super' ? '최고관리자' : 
+                        currentAdmin.role === 'admin' ? '일반관리자' : '직원';
+        document.getElementById('adminWelcome').textContent = `${currentAdmin.name}(${roleText})님 환영합니다!`;
+    }
+            // 폼 이벤트 등록
+            setupForms();
+            
+            // 초기 데이터 로딩
+            loadCategories();
+            loadProducts();
+            loadCategoryOptions();
+            });
+
+             // 카테고리 관련 함수들
+             function loadCategories() {
+            const tbody = document.getElementById('categoryTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            categories.forEach(category => {
+                const productCount = products.filter(p => p.category === category.slug).length;
+                const row = `
+                    <tr>
+                        <td>#C${category.id.toString().padStart(3, '0')}</td>
+                        <td>
+                            <div class="category-preview">
+                                <span class="category-icon">${category.icon}</span>
+                                <span>${category.name}</span>
+                            </div>
+                        </td>
+                        <td>${category.slug}</td>
+                        <td>${category.icon}</td>
+                        <td><span class="category-count">${productCount}개</span></td>
+                        <td><span class="status-badge status-${category.status}">${category.status === 'active' ? '활성' : '비활성'}</span></td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editCategory(${category.id})">수정</button>
+                            <button class="btn btn-danger" onclick="deleteCategory(${category.id})">삭제</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+         }
+
+            function openCategoryModal() {
+            editingCategoryId = null;
+            document.getElementById('categoryModalTitle').textContent = '새 카테고리 추가';
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryModal').style.display = 'block';
+            }
+
+         function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+         }
+
+            function editCategory(id) {
+            const category = categories.find(c => c.id === id);
+            if (!category) return;
+            
+            editingCategoryId = id;
+            document.getElementById('categoryModalTitle').textContent = '카테고리 수정';
+            document.getElementById('categoryName').value = category.name;
+            document.getElementById('categorySlug').value = category.slug;
+            document.getElementById('categoryIcon').value = category.icon;
+            document.getElementById('categoryDescription').value = category.description || '';
+            document.getElementById('categoryStatus').value = category.status;
+            document.getElementById('categoryModal').style.display = 'block';
+            }
+
+            function deleteCategory(id) {
+            const category = categories.find(c => c.id === id);
+            const productCount = products.filter(p => p.category === category.slug).length;
+            
+            if (productCount > 0) {
+                alert(`이 카테고리에 ${productCount}개의 상품이 있어서 삭제할 수 없습니다.`);
+                return;
+            }
+            
+            if (confirm(`'${category.name}' 카테고리를 정말 삭제하시겠습니까?`)) {
+                categories = categories.filter(c => c.id !== id);
+                localStorage.setItem('categories', JSON.stringify(categories));
+                loadCategories();
+                loadCategoryOptions();
+                alert('카테고리가 삭제되었습니다.');
+            }
+         }
+
+             // 상품 관련 함수들
+             function loadProducts() {
+            const tbody = document.getElementById('productTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            products.forEach(product => {
+                const category = categories.find(c => c.slug === product.category);
+                const categoryName = category ? category.name : '미분류';
+                
+                const row = `
+                    <tr>
+                        <td>#P${product.id.toString().padStart(3, '0')}</td>
+                        <td>
+                            ${product.image ? 
+                                `<img src="${product.image}" alt="${product.name}" class="product-image">` : 
+                                `<div class="no-image">이미지 없음</div>`
+                            }
+                        </td>
+                        <td>${product.name}</td>
+                        <td>${categoryName}</td>
+                        <td>₩${product.price.toLocaleString()}</td>
+                        <td>${product.stock}개</td>
+                        <td><span class="status-badge status-${product.status}">${getProductStatusText(product.status)}</span></td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editProduct(${product.id})">수정</button>
+                            <button class="btn btn-danger" onclick="deleteProduct(${product.id})">삭제</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+         }
+
+            function loadCategoryOptions() {
+            const select = document.getElementById('productCategory');
+            if (!select) return;
+            
+            select.innerHTML = '<option value="">카테고리 선택</option>';
+            
+            categories.filter(c => c.status === 'active').forEach(category => {
+                select.innerHTML += `<option value="${category.slug}">${category.name}</option>`;
+            });
+         }
+
+         function openProductModal() {
+            editingProductId = null;
+            document.getElementById('modalTitle').textContent = '새 상품 등록';
+            document.getElementById('productForm').reset();
+            document.getElementById('productModal').style.display = 'block';
+         }
+
+          function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+         }
+
+            function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            
+            editingProductId = id;
+            document.getElementById('modalTitle').textContent = '상품 수정';
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productCategory').value = product.category;
+            document.getElementById('productPrice').value = product.price.toLocaleString();
+            document.getElementById('productStock').value = product.stock.toLocaleString();
+            document.getElementById('productImage').value = product.image || '';
+            document.getElementById('productDescription').value = product.description || '';
+            document.getElementById('productStatus').value = product.status;
+            document.getElementById('productModal').style.display = 'block';
+            }
+
+         function deleteProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (confirm(`'${product.name}' 상품을 정말 삭제하시겠습니까?`)) {
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('products', JSON.stringify(products));
+                loadProducts();
+                loadCategories(); // 상품 수 업데이트
+                alert('상품이 삭제되었습니다.');
+            }
+            }
+
+            function getProductStatusText(status) {
+            switch(status) {
+                case 'active': return '판매중';
+                case 'inactive': return '판매중지';
+                case 'soldout': return '품절';
+                default: return '알 수 없음';
+            }
+         }
+
+                // 폼 이벤트 설정
+         function setupForms() {
+            // 카테고리 폼
+            const categoryForm = document.getElementById('categoryForm');
+            if (categoryForm) {
+                categoryForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        name: document.getElementById('categoryName').value,
+                        slug: document.getElementById('categorySlug').value,
+                        icon: document.getElementById('categoryIcon').value,
+                        description: document.getElementById('categoryDescription').value,
+                        status: document.getElementById('categoryStatus').value
+                    };
+                    
+                    // 영문명 중복 체크
+                    const existingCategory = categories.find(c => 
+                        c.slug === formData.slug && c.id !== editingCategoryId
+                    );
+                    
+                    if (existingCategory) {
+                        alert('이미 존재하는 영문명입니다.');
+                        return;
+                    }
+                    
+                    if (editingCategoryId) {
+                        // 수정
+                        const index = categories.findIndex(c => c.id === editingCategoryId);
+                        categories[index] = { ...categories[index], ...formData };
+                        alert('카테고리가 수정되었습니다.');
+                    } else {
+                        // 새로 추가
+                        const newId = Math.max(...categories.map(c => c.id), 0) + 1;
+                        categories.push({ id: newId, ...formData });
+                        alert('카테고리가 추가되었습니다.');
+                    }
+                    
+                    localStorage.setItem('categories', JSON.stringify(categories));
+                    loadCategories();
+                    loadCategoryOptions();
+                    closeCategoryModal();
+                    // 관리자 폼 설정 추가
+                    setupAdminForm();
+                });
+            }
+            
+            // 상품 폼
+            const productForm = document.getElementById('productForm');
+            if (productForm) {
+                productForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        name: document.getElementById('productName').value,
+                        category: document.getElementById('productCategory').value,
+                        price: getPriceValue(document.getElementById('productPrice')),
+                        stock: getStockValue(document.getElementById('productStock')),
+                        image: document.getElementById('productImage').value,
+                        description: document.getElementById('productDescription').value,
+                        status: document.getElementById('productStatus').value
+                    };
+                    
+                    if (editingProductId) {
+                        // 수정
+                        const index = products.findIndex(p => p.id === editingProductId);
+                        products[index] = { ...products[index], ...formData };
+                        alert('상품이 수정되었습니다.');
+                    } else {
+                        // 새로 추가
+                        const newId = Math.max(...products.map(p => p.id), 0) + 1;
+                        products.push({ id: newId, ...formData });
+                        alert('상품이 등록되었습니다.');
+                    }
+                    
+                    localStorage.setItem('products', JSON.stringify(products));
+                    loadProducts();
+                    loadCategories(); // 상품 수 업데이트
+                    closeProductModal();
+                });
+            }
+            }
+
+            // 모달 외부 클릭시 닫기
+            window.onclick = function(event) {
+            const categoryModal = document.getElementById('categoryModal');
+            const productModal = document.getElementById('productModal');
+            
+            if (event.target === categoryModal) {
+                closeCategoryModal();
+            }
+            if (event.target === productModal) {
+                closeProductModal();
+            }
+                if (event.target === reviewDetailModal) {
+            closeReviewDetailModal();
+            }
+            }
+                // 가격 입력 관련 함수들
+                function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : evt.keyCode;
+            // 숫자(0-9)와 백스페이스(8), 삭제(46)만 허용
+            if (charCode > 31 && (charCode < 48 || charCode > 57)) {
+                return false;
+            }
+            return true;
+         }
+
+            function formatPrice(input) {
+            // 숫자가 아닌 문자 제거
+            let value = input.value.replace(/[^0-9]/g, '');
+            
+            // 빈 값이면 그대로 반환
+            if (value === '') {
+                input.value = '';
+                return;
+            }
+            
+            // 숫자를 천 단위로 쉼표 추가
+            let formattedValue = parseInt(value).toLocaleString();
+            input.value = formattedValue;
+            }
+
+            function getPriceValue(input) {
+            // 쉼표 제거하고 숫자만 반환
+            return parseInt(input.value.replace(/[^0-9]/g, '')) || 0;
+            }
+
+            // 재고 입력 관련 함수들
+            function formatStock(input) {
+            // 숫자가 아닌 문자 제거
+            let value = input.value.replace(/[^0-9]/g, '');
+            
+            // 빈 값이면 그대로 반환
+            if (value === '') {
+                input.value = '';
+                return;
+            }
+            
+            // 숫자를 천 단위로 쉼표 추가
+            let formattedValue = parseInt(value).toLocaleString();
+            input.value = formattedValue;
+         }
+
+            function getStockValue(input) {
+            // 쉼표 제거하고 숫자만 반환
+            return parseInt(input.value.replace(/[^0-9]/g, '')) || 0;
+            }
+            // 리뷰 관리 함수들
+            // 리뷰 관리 함수들 (완전히 교체)
+            function loadReviews() {
+         const tbody = document.getElementById('reviewTableBody');
+         if (!tbody) return;
+    
+         tbody.innerHTML = '';
+    
+            reviews.forEach(review => {
+            const product = products.find(p => p.id === review.productId);
+            const productName = product ? product.name : '삭제된 상품';
+            const stars = '⭐'.repeat(review.rating);
+        
+            const row = `
+            <tr>
+                <td>#R${review.id.toString().padStart(3, '0')}</td>
+                <td>${productName}</td>
+                <td>${review.customerName}</td>
+                <td>${stars} (${review.rating}점)</td>
+                <td>
+                    <div style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${review.content}</div>
+                    <button class="btn" style="background: #17a2b8; color: white; font-size: 12px; padding: 4px 8px; margin-top: 5px;" onclick="showReviewDetail(${review.id})">상세보기</button>
+                </td>
+                <td>${review.date}</td>
+                <td><span class="status-badge status-${review.status}">${getReviewStatusText(review.status)}</span></td>
+                <td>
+                    <select onchange="changeReviewStatus(${review.id}, this.value)" style="padding: 5px; margin-bottom: 5px; border-radius: 3px; border: 1px solid #ddd;">
+                        <option value="pending" ${review.status === 'pending' ? 'selected' : ''}>대기중</option>
+                        <option value="approved" ${review.status === 'approved' ? 'selected' : ''}>승인됨</option>
+                        <option value="hidden" ${review.status === 'hidden' ? 'selected' : ''}>숨김</option>
+                    </select><br>
+                    <button class="btn btn-danger" onclick="deleteReview(${review.id})" style="font-size: 12px; padding: 4px 8px;">삭제</button>
+                </td>
+            </tr>
+            `;
+            tbody.innerHTML += row;
+            });
+            }
+
+            function getReviewStatusText(status) {
+            switch(status) {
+            case 'approved': return '승인됨';
+            case 'pending': return '대기중';
+            case 'hidden': return '숨김';
+         default: return '알 수 없음';
+         }
+         }
+
+// 새로운 상태 변경 함수
+function changeReviewStatus(id, newStatus) {
+    const review = reviews.find(r => r.id === id);
+    if (review) {
+        const oldStatus = review.status;
+        review.status = newStatus;
+        localStorage.setItem('reviews', JSON.stringify(reviews));
+        loadReviews();
+        
+        let message = '';
+        switch(newStatus) {
+            case 'approved': message = '리뷰가 승인되었습니다.'; break;
+            case 'pending': message = '리뷰가 대기 상태로 변경되었습니다.'; break;
+            case 'hidden': message = '리뷰가 숨김 처리되었습니다.'; break;
+        }
+        alert(message);
+    }
+}
+
+// 리뷰 상세보기 함수
+function showReviewDetail(id) {
+    const review = reviews.find(r => r.id === id);
+    if (!review) return;
+    
+    const product = products.find(p => p.id === review.productId);
+    const productName = product ? product.name : '삭제된 상품';
+    const stars = '⭐'.repeat(review.rating);
+    
+    // 모달에 데이터 채우기
+    document.getElementById('detailReviewId').textContent = `#R${review.id.toString().padStart(3, '0')}`;
+    document.getElementById('detailReviewDate').textContent = review.date;
+    document.getElementById('detailProductName').textContent = productName;
+    document.getElementById('detailCustomerName').textContent = review.customerName;
+    document.getElementById('detailRating').textContent = `${stars} (${review.rating}점)`;
+    document.getElementById('detailReviewContent').textContent = review.content;
+    
+    const statusElement = document.getElementById('detailReviewStatus');
+    statusElement.textContent = getReviewStatusText(review.status);
+    statusElement.className = `status-badge status-${review.status}`;
+    
+    // 모달 열기
+    document.getElementById('reviewDetailModal').style.display = 'block';
+}
+
+// 리뷰 상세보기 모달 닫기
+function closeReviewDetailModal() {
+    document.getElementById('reviewDetailModal').style.display = 'none';
+}
+
+function deleteReview(id) {
+    if (confirm('이 리뷰를 정말 삭제하시겠습니까?')) {
+        reviews = reviews.filter(r => r.id !== id);
+        localStorage.setItem('reviews', JSON.stringify(reviews));
+        loadReviews();
+        alert('리뷰가 삭제되었습니다.');
+    }
+}
+
+function filterReviews() {
+    const filter = document.getElementById('reviewFilter').value;
+    // 필터링 기능은 나중에 구현
+    loadReviews();
+}
+
+// 관리자 관리 함수들
+let editingAdminId = null;
+
+function loadAdmins() {
+    const tbody = document.getElementById('adminTableBody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    admins.forEach(admin => {
+        const row = `
+            <tr>
+                <td>#A${admin.id.toString().padStart(3, '0')}</td>
+                <td>${admin.username}</td>
+                <td>${admin.name}</td>
+                <td>
+                    <span class="status-badge ${getRoleClass(admin.role)}">${getRoleText(admin.role)}</span>
+                </td>
+                <td>${admin.createdDate}</td>
+                <td>${admin.lastLogin || '로그인 기록 없음'}</td>
+                <td><span class="status-badge status-${admin.status}">${admin.status === 'active' ? '활성' : '비활성'}</span></td>
+                <td>
+                    <button class="btn btn-warning" onclick="editAdmin(${admin.id})">수정</button>
+                    ${admin.id !== 1 ? `<button class="btn btn-danger" onclick="deleteAdmin(${admin.id})">삭제</button>` : ''}
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+function getRoleClass(role) {
+    switch(role) {
+        case 'super': return 'status-completed';
+        case 'admin': return 'status-processing';
+        case 'staff': return 'status-pending';
+        default: return 'status-pending';
+    }
+}
+
+function getRoleText(role) {
+    switch(role) {
+        case 'super': return '최고 관리자';
+        case 'admin': return '일반 관리자';
+        case 'staff': return '직원';
+        default: return '알 수 없음';
+    }
+}
+
+function openAdminModal() {
+    editingAdminId = null;
+    document.getElementById('adminModalTitle').textContent = '새 관리자 추가';
+    document.getElementById('adminForm').reset();
+    document.getElementById('adminModal').style.display = 'block';
+}
+
+function closeAdminModal() {
+    document.getElementById('adminModal').style.display = 'none';
+}
+
+function editAdmin(id) {
+    const admin = admins.find(a => a.id === id);
+    if (!admin) return;
+    
+    editingAdminId = id;
+    document.getElementById('adminModalTitle').textContent = '관리자 수정';
+    document.getElementById('adminUsername').value = admin.username;
+    document.getElementById('adminPassword').value = '';
+    document.getElementById('adminConfirmPassword').value = '';
+    document.getElementById('adminName').value = admin.name;
+    document.getElementById('adminRole').value = admin.role;
+    document.getElementById('adminStatus').value = admin.status;
+    
+    // 수정 모드에서는 비밀번호 필수 해제
+    document.getElementById('adminPassword').required = false;
+    document.getElementById('adminConfirmPassword').required = false;
+    
+    document.getElementById('adminModal').style.display = 'block';
+}
+
+function deleteAdmin(id) {
+    const admin = admins.find(a => a.id === id);
+    if (confirm(`'${admin.name}' 관리자를 정말 삭제하시겠습니까?`)) {
+        admins = admins.filter(a => a.id !== id);
+        localStorage.setItem('admins', JSON.stringify(admins));
+        loadAdmins();
+        alert('관리자가 삭제되었습니다.');
+    }
+}
+
+// 관리자 폼 이벤트
+function setupAdminForm() {
+    const adminForm = document.getElementById('adminForm');
+    if (adminForm) {
+        adminForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            const confirmPassword = document.getElementById('adminConfirmPassword').value;
+            const name = document.getElementById('adminName').value;
+            const role = document.getElementById('adminRole').value;
+            const status = document.getElementById('adminStatus').value;
+            
+            // 유효성 검사
+            if (!editingAdminId && !password) {
+                alert('비밀번호를 입력해주세요.');
+                return;
+            }
+            
+            if (password && password.length < 8) {
+                alert('비밀번호는 8자 이상이어야 합니다.');
+                return;
+            }
+            
+            if (password && password !== confirmPassword) {
+                alert('비밀번호가 일치하지 않습니다.');
+                return;
+            }
+            
+            // 아이디 중복 체크
+            const existingAdmin = admins.find(a => 
+                a.username === username && a.id !== editingAdminId
+            );
+            
+            if (existingAdmin) {
+                alert('이미 존재하는 아이디입니다.');
+                return;
+            }
+            
+            const formData = {
+                username: username,
+                name: name,
+                role: role,
+                status: status
+            };
+            
+            if (password) {
+                formData.password = password;
+            }
+            
+            if (editingAdminId) {
+                // 수정
+                const index = admins.findIndex(a => a.id === editingAdminId);
+                admins[index] = { ...admins[index], ...formData };
+                alert('관리자 정보가 수정되었습니다.');
+            } else {
+                // 새로 추가
+                const newId = Math.max(...admins.map(a => a.id), 0) + 1;
+                admins.push({ 
+                    id: newId, 
+                    ...formData,
+                    createdDate: new Date().toISOString().split('T')[0],
+                    lastLogin: null
+                });
+                alert('새 관리자가 추가되었습니다.');
+            }
+            
+            localStorage.setItem('admins', JSON.stringify(admins));
+            loadAdmins();
+            closeAdminModal();
+        });
+    }
+}
+
+
+    </script>
+
+</html>
+

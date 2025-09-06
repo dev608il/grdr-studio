@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 상세 - GRDR STUDIO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+        header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: fixed; width: 100%; top: 0; z-index: 1000; }
+        .header-top { background: #f8f9fa; padding: 8px 0; font-size: 12px; text-align: center; color: #666; }
+        .header-main { padding: 15px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 28px; font-weight: bold; color: #ff6b6b; text-decoration: none; }
+        .search-bar { flex: 1; max-width: 400px; margin: 0 40px; position: relative; }
+        .search-bar input { width: 100%; padding: 12px 50px 12px 20px; border: 2px solid #e9ecef; border-radius: 25px; font-size: 14px; outline: none; }
+        .search-btn { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #666; cursor: pointer; }
+        .header-icons { display: flex; gap: 20px; align-items: center; }
+        .icon-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #666; }
+        main { margin-top: 100px; padding: 40px 0; }
+        .breadcrumb { margin-bottom: 30px; font-size: 14px; color: #666; }
+        .breadcrumb a { color: #666; text-decoration: none; }
+        .product-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; margin-bottom: 60px; }
+        .product-main-image { width: 100%; height: 500px; background: linear-gradient(45deg, #f8f9fa, #e9ecef); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 48px; }
+        .product-main-image img { width: 100%; height: 100%; object-fit: cover; border-radius: 15px; }
+        .product-category { color: #ff6b6b; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+        .product-title { font-size: 32px; font-weight: 700; margin-bottom: 20px; color: #2c3e50; }
+        .product-price { font-size: 28px; font-weight: 700; color: #ff6b6b; margin-bottom: 20px; }
+        .product-description { font-size: 16px; line-height: 1.8; color: #666; margin-bottom: 30px; }
+        .quantity-selector { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .quantity-btn { width: 40px; height: 40px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 18px; border-radius: 5px; }
+        .quantity-input { width: 80px; height: 40px; text-align: center; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
+        .product-actions { display: flex; gap: 15px; margin-bottom: 30px; }
+        .btn { padding: 15px 30px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; flex: 1; }
+        .btn-primary { background: #ff6b6b; color: white; }
+        .btn-secondary { background: white; color: #ff6b6b; border: 2px solid #ff6b6b; }
+        @media (max-width: 768px) { .product-detail { grid-template-columns: 1fr; gap: 30px; } }
+                /* 상품 상세 탭 스타일 */
+        .product-detail-tabs {
+            margin-top: 50px;
+            border-top: 2px solid #f1f3f4;
+            padding-top: 30px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #ff6b6b;
+            border-bottom-color: #ff6b6b;
+        }
+
+        .tab-btn:hover {
+            color: #ff6b6b;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px 0;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .detail-section h3,
+        .specs-table h3,
+        .shipping-info h3,
+        .review-section h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .info-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .info-table td:first-child {
+            background: #f8f9fa;
+            font-weight: 600;
+            width: 150px;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h4 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .info-box p {
+            margin-bottom: 5px;
+            line-height: 1.6;
+        }
+
+        .review-summary {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .rating-score {
+            font-size: 48px;
+            font-weight: 700;
+            color: #ff6b6b;
+        }
+
+        .rating-stars {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .review-item {
+            border-bottom: 1px solid #f1f3f4;
+            padding: 20px 0;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .reviewer {
+            font-weight: 600;
+        }
+
+        .review-date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .review-text {
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .detail-images {
+            margin-top: 30px;
+        }
+
+        .detail-images img {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .tab-buttons {
+                flex-wrap: wrap;
+            }
+            
+            .tab-btn {
+                flex: 1;
+                min-width: 80px;
+                font-size: 14px;
+                padding: 12px 15px;
+            }
+            
+            .review-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-top">🎉 신규 회원 가입시 10% 할인 쿠폰 증정! 무료배송 이벤트 진행중 🎉</div>
+        <div class="header-main">
+            <div class="container">
+                <div class="header-content">
+                    <a href="index.html" class="logo">GRDR STUDIO</a>
+                    <div class="search-bar">
+                        <input type="text" placeholder="원하는 상품을 검색해보세요">
+                        <button class="search-btn">🔍</button>
+                    </div>
+                    <div class="header-icons">
+                        <button class="icon-btn">👤</button>
+                        <button class="icon-btn">❤️</button>
+                        <button class="icon-btn" onclick="window.location.href='cart.html'">🛒</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="breadcrumb">
+                <a href="index.html">홈</a> > 
+                <a href="#" id="categoryBreadcrumb">카테고리</a> > 
+                <span id="productBreadcrumb">상품명</span>
+            </div>
+
+            <div class="product-detail">
+                <div class="product-image-section">
+                    <div class="product-main-image" id="productMainImage">📦</div>
+                </div>
+
+                <div class="product-info-section">
+                    <div class="product-category" id="productCategory">카테고리</div>
+                    <h1 class="product-title" id="productTitle">상품명</h1>
+                    <div class="product-price" id="productPrice">₩0</div>
+                    <div class="product-description" id="productDescription">상품 설명이 여기에 표시됩니다.</div>
+
+                    <div class="quantity-selector">
+                        <label style="margin-right: 10px; font-weight: 600;">수량:</label>
+                        <button class="quantity-btn" onclick="changeQuantity(-1)">-</button>
+                        <input type="number" class="quantity-input" id="quantity" value="1" min="1">
+                        <button class="quantity-btn" onclick="changeQuantity(1)">+</button>
+                    </div>
+
+                    <div class="product-actions">
+                        <button class="btn btn-secondary" onclick="addToCart()">장바구니 담기</button>
+                        <button class="btn btn-primary" onclick="buyNow()">바로 구매</button>
+                    </div>
+
+                    <!-- ⭐ 여기에 상세 정보 탭 추가! -->
+                    <div class="product-detail-tabs">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="showTab('detail')">상세정보</button>
+                            <button class="tab-btn" onclick="showTab('specs')">상품정보</button>
+                            <button class="tab-btn" onclick="showTab('shipping')">배송/교환</button>
+                            <button class="tab-btn" onclick="showTab('review')">리뷰</button>
+                        </div>
+
+                        <div id="detail-tab" class="tab-content active">
+                            <div class="detail-section">
+                                <h3>상품 상세 설명</h3>
+                                <div id="productDetailDescription">
+                                    <p>상품에 대한 자세한 설명이 여기에 표시됩니다.</p>
+                                </div>
+                                
+                                <div class="detail-images" id="productDetailImages">
+                                    <!-- 상세 이미지들이 여기에 추가됩니다 -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="specs-tab" class="tab-content">
+                            <div class="specs-table">
+                                <h3>상품 정보</h3>
+                                <table class="info-table">
+                                    <tr>
+                                        <td>상품명</td>
+                                        <td id="specProductName">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>카테고리</td>
+                                        <td id="specCategory">-</td>
+                                    </tr>
+                                    <tr>
+                                        <td>브랜드</td>
+                                        <td>GRDR STUDIO</td>
+                                    </tr>
+                                    <tr>
+                                        <td>원산지</td>
+                                        <td>대한민국</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="shipping-tab" class="tab-content">
+                            <div class="shipping-info">
+                                <h3>배송 정보</h3>
+                                <div class="info-box">
+                                    <h4>🚚 배송비</h4>
+                                    <p>• 5만원 이상 구매시 <strong>무료배송</strong></p>
+                                    <p>• 5만원 미만 구매시 배송비 3,000원</p>
+                                </div>
+                                
+                                <div class="info-box">
+                                    <h4>📦 배송 기간</h4>
+                                    <p>• 평일 오후 2시 이전 주문시 당일 발송</p>
+                                    <p>• 일반적으로 1-2일 내 배송 완료</p>
+                                    <p>• 주말/공휴일은 배송되지 않습니다</p>
+                                </div>
+
+                                <h3 style="margin-top: 30px;">교환/환불 정보</h3>
+                                <div class="info-box">
+                                    <h4>🔄 교환/환불 가능 기간</h4>
+                                    <p>• 상품 수령 후 7일 이내</p>
+                                    <p>• 단, 상품이 훼손되지 않은 경우에 한함</p>
+                                </div>
+
+                                <div class="info-box">
+                                    <h4>❌ 교환/환불 불가 사항</h4>
+                                    <p>• 고객의 단순 변심으로 인한 교환/환불</p>
+                                    <p>• 상품을 사용하거나 훼손한 경우</p>
+                                    <p>• 스티커류는 개봉 후 교환/환불 불가</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="review-tab" class="tab-content">
+                            <div class="review-section">
+                                <h3>고객 리뷰</h3>
+                                <div class="review-summary">
+                                    <div class="rating-overview">
+                                        <span class="rating-score">4.8</span>
+                                        <div class="rating-stars">⭐⭐⭐⭐⭐</div>
+                                        <p>총 24개의 리뷰</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="review-list">
+                                    <div class="review-item">
+                                        <div class="review-header">
+                                            <span class="reviewer">김**</span>
+                                            <span class="review-date">2024.01.15</span>
+                                            <span class="review-rating">⭐⭐⭐⭐⭐</span>
+                                        </div>
+                                        <p class="review-text">정말 귀엽고 품질도 좋아요! 다이어리 꾸미기에 딱 좋네요 😊</p>
+                                    </div>
+                                    
+                                    <div class="review-item">
+                                        <div class="review-header">
+                                            <span class="reviewer">이**</span>
+                                            <span class="review-date">2024.01.12</span>
+                                            <span class="review-rating">⭐⭐⭐⭐⭐</span>
+                                        </div>
+                                        <p class="review-text">배송도 빠르고 포장도 깔끔하게 잘 되어있어요. 재구매 의사 있습니다!</p>
+                                    </div>
+
+                                    <div class="review-item">
+                                        <div class="review-header">
+                                            <span class="reviewer">박**</span>
+                                            <span class="review-date">2024.01.10</span>
+                                            <span class="review-rating">⭐⭐⭐⭐</span>
+                                        </div>
+                                        <p class="review-text">생각보다 크기가 작았지만 디자인이 너무 예뻐서 만족해요!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const categories = JSON.parse(localStorage.getItem('categories')) || [];
+        const products = JSON.parse(localStorage.getItem('products')) || [];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+            
+            if (productId) {
+                loadProductDetail(parseInt(productId));
+            } else if (products.length > 0) {
+                loadProductDetail(products[0].id);
+            } else {
+                alert('등록된 상품이 없습니다.');
+                window.location.href = 'index.html';
+            }
+        });
+        
+        function loadProductDetail(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) {
+                alert('상품을 찾을 수 없습니다.');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const category = categories.find(c => c.slug === product.category);
+            const categoryName = category ? category.name : '미분류';
+            
+            document.getElementById('productCategory').textContent = categoryName;
+            document.getElementById('productTitle').textContent = product.name;
+            document.getElementById('productPrice').textContent = `₩${product.price.toLocaleString()}`;
+            document.getElementById('productDescription').textContent = product.description || '상품 설명이 없습니다.';
+            document.getElementById('categoryBreadcrumb').textContent = categoryName;
+            document.getElementById('productBreadcrumb').textContent = product.name;
+            
+            const imageElement = document.getElementById('productMainImage');
+            if (product.image) {
+                imageElement.innerHTML = `<img src="${product.image}" alt="${product.name}">`;
+            } else {
+                imageElement.innerHTML = '📦';
+            }
+            
+            document.title = `${product.name} - GRDR STUDIO`;
+            updateDetailTabs(product, categoryName);
+        }
+        
+        function changeQuantity(change) {
+            const quantityInput = document.getElementById('quantity');
+            let currentQuantity = parseInt(quantityInput.value) || 1;
+            currentQuantity += change;
+            if (currentQuantity < 1) currentQuantity = 1;
+            quantityInput.value = currentQuantity;
+        }
+        
+        function addToCart() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = parseInt(urlParams.get('id')) || (products.length > 0 ? products[0].id : 1);
+            const quantity = parseInt(document.getElementById('quantity').value) || 1;
+            
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const existingItem = cart.find(item => item.productId === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({ productId: productId, quantity: quantity });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert('장바구니에 상품이 추가되었습니다!');
+        }
+        
+        function buyNow() {
+            addToCart();
+            window.location.href = 'cart.html';
+        }
+                // 탭 전환 함수
+        function showTab(tabName) {
+            // 모든 탭 버튼에서 active 클래스 제거
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 모든 탭 컨텐츠 숨기기
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // 클릭한 탭 버튼에 active 클래스 추가
+            event.target.classList.add('active');
+            
+            // 선택한 탭 컨텐츠 보이기
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // 상품 정보를 상세 탭에도 표시하는 함수 (기존 loadProductDetail 함수에 추가)
+        function updateDetailTabs(product, categoryName) {
+            // 상품 정보 탭 업데이트
+             document.getElementById('specProductName').textContent = product.name;
+    document.getElementById('specCategory').textContent = categoryName;
+    
+    const detailDesc = document.getElementById('productDetailDescription');
+    if (product.description) {
+        detailDesc.innerHTML = `<p>${product.description}</p>`;
+    }
+}
+
+    </script>
+</body>
+</html>
